@@ -1,7 +1,6 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState, useMemo } from "react";
 import { IoIosAddCircle } from "react-icons/io";
-import { Column } from "../Model/Type";
+import { Column, Task } from "../Model/Type";
 import ColumnContainer from "./ColumnContainer";
 import {
   DndContext,
@@ -19,6 +18,8 @@ function KanbanBoard() {
   const [column, setColumn] = useState<Column[]>([]); //for colum || vertical box i
   const [active, setActive] = useState<Column | null>(null); //Draging active
   console.log(column);
+  //creatung new subtask X
+  const [task, setTask] = useState<Task[]>([])
   const columnId = useMemo(() => column.map((col) => col.id), [column]);
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -45,6 +46,8 @@ function KanbanBoard() {
                     column={col}
                     deleteColumn={deleteColumn}
                     updateColumn={updateColumn}
+                    createTask={createTask}
+                    task = {task.filter((tasks)=>tasks.columnId===col.id)}
                   />
                 </div>
               ))}
@@ -66,6 +69,7 @@ function KanbanBoard() {
                 column={active}
                 deleteColumn={deleteColumn}
                 updateColumn={updateColumn}
+                createTask={createTask}
               />
             )}
           </DragOverlay>,
@@ -103,6 +107,15 @@ function KanbanBoard() {
   }
 }
 
+//createTask
+function createTask(columnId:Id){
+  const newTask: Task = {
+    id:generateId(),
+    columnId,
+    content: `Task ${task.length + 1}`
+  }
+  setTask([...task,newTask])
+}
   //deleting col
   function deleteColumn(id: Id) {
     const filterColumn = column.filter((col) => col.id !== id);
