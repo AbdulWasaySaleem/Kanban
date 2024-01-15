@@ -5,6 +5,7 @@ import ColumnContainer from "./ColumnContainer";
 import {
   DndContext,
   DragEndEvent,
+  DragOverEvent,
   DragOverlay,
   DragStartEvent,
   PointerSensor,
@@ -13,13 +14,15 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
+import TaskCard from "./TaskCard";
 
 function KanbanBoard() {
   const [column, setColumn] = useState<Column[]>([]); //for colum || vertical box i
   const [active, setActive] = useState<Column | null>(null); //Draging active
+  const [activeTsk, setActiveTsk] = useState<Task | null>(null); //Draging active
   //console.log(column);
   //creatung new subtask X
-  const [task, setTask] = useState<Task[]>([])
+  const [task, setTask] = useState<Task[]>([]);
   const columnId = useMemo(() => column.map((col) => col.id), [column]);
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -34,6 +37,7 @@ function KanbanBoard() {
         sensors={sensors}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
+        onDragOver={onDragOver}
       >
         <div className="m-auto flex gap-2">
           {/* mapping through to add diffrent col for todo, inProgress and Ended iv*/}
@@ -49,7 +53,7 @@ function KanbanBoard() {
                     createTask={createTask}
                     updateTask={updateTask}
                     deleteTask={deleteTask}
-                    task = {task.filter((tasks)=>tasks.columnId===col.id)}
+                    task={task.filter((tasks) => tasks.columnId === col.id)}
                   />
                 </div>
               ))}
@@ -72,8 +76,15 @@ function KanbanBoard() {
                 deleteColumn={deleteColumn}
                 updateColumn={updateColumn}
                 createTask={createTask}
-                deleteTask={deleteTask} 
-                task = {task.filter((tasks)=>tasks.columnId===active.id)}
+                deleteTask={deleteTask}
+                updateTask={updateTask}
+                task={task.filter((tasks) => tasks.columnId === active.id)}
+              />
+            )}
+            {activeTsk && (
+              <TaskCard
+                tasks={activeTsk}
+                deleteTask={deleteTask}
                 updateTask={updateTask}
               />
             )}
@@ -83,58 +94,58 @@ function KanbanBoard() {
       </DndContext>
     </div>
   );
-  
+
   //colums so we can add rest stuff inside(todo/progrexx/ended etc) ii
   function createNewColumn() {
-  const defaultTitle = `Column ${column.length + 1}`;
+    const defaultTitle = `Column ${column.length + 1}`;
 
-  // Use the input value if available
-  const inputValue = prompt('Enter column title:');
-  if (inputValue !== null) {
-    const updatedColumn = column.map((col) =>
-      col.id === active?.id ? { ...col, title: inputValue.trim() } : col
-    );
+    // Use the input value if available
+    const inputValue = prompt("Enter column title:");
+    if (inputValue !== null) {
+      const updatedColumn = column.map((col) =>
+        col.id === active?.id ? { ...col, title: inputValue.trim() } : col
+      );
 
-    setColumn((prevColumns) => {
-      // Check if the column already exists and update it
-      if (active && column.some((col) => col.id === active.id)) {
-        return updatedColumn;
-      }
+      setColumn((prevColumns) => {
+        // Check if the column already exists and update it
+        if (active && column.some((col) => col.id === active.id)) {
+          return updatedColumn;
+        }
 
-      // Add a new column with the default title if no input is provided
-      const columnToAdd: Column = {
-        id: generateId(),
-        title: inputValue.trim() || defaultTitle,
-      };
+        // Add a new column with the default title if no input is provided
+        const columnToAdd: Column = {
+          id: generateId(),
+          title: inputValue.trim() || defaultTitle,
+        };
 
-      return [...prevColumns, columnToAdd];
+        return [...prevColumns, columnToAdd];
+      });
+    }
+  }
+
+  //createTask
+  function createTask(columnId: Id) {
+    const newTask: Task = {
+      id: generateId(),
+      columnId,
+      content: `Task ${task.length + 1}`,
+    };
+    setTask([...task, newTask]);
+  }
+  //deleteTask
+  function deleteTask(id: Id) {
+    const newTasks = task.filter((task) => task.id !== id);
+    setTask(newTasks);
+  }
+  //update
+  function updateTask(id: Id, content: string) {
+    const newTasks = task.map((tasks) => {
+      if (tasks.id !== id) return tasks; // Return the original task if IDs don't match
+      return { ...tasks, content }; // Return the updated task
     });
-  }
-}
 
-//createTask
-function createTask(columnId:Id){
-  const newTask: Task = {
-    id:generateId(),
-    columnId,
-    content: `Task ${task.length + 1}`
+    setTask(newTasks); // Update the state with the new tasks array
   }
-  setTask([...task,newTask])
-}
-//deleteTask
-function deleteTask(id: Id) {
-  const newTasks = task.filter((task) => task.id !== id);
-  setTask(newTasks);
-}
-//update
-function updateTask(id: Id, content: string) {
-  const newTasks = task.map((tasks) => {
-    if (tasks.id !== id) return tasks; // Return the original task if IDs don't match
-    return { ...tasks, content }; // Return the updated task
-  });
-
-  setTask(newTasks); // Update the state with the new tasks array
-}
 
   //deleting col
   function deleteColumn(id: Id) {
@@ -156,8 +167,16 @@ function updateTask(id: Id, content: string) {
       setActive(event.active.data.current.type);
       return;
     }
+    if (event.active.data.current?.type === "Task") {
+      setActiveTsk(event.active.data.current.task);
+      return;
+    }
   }
   function onDragEnd(event: DragEndEvent) {
+    //removign dragoverlay
+    setActive(null);
+    setActiveTsk(null);
+    //restimplemntation
     const { active, over } = event;
     if (!over) return;
     const activeColumnId = active.id;
@@ -173,6 +192,35 @@ function updateTask(id: Id, content: string) {
 
       return arrayMove(column, activeColumnIndex, overColumnIndex);
     });
+  }
+  //ondragover=>task
+  function onDragOver(event: DragOverEvent) {
+    const { active, over } = event;
+    if (!over) return;
+    const activeId = active.id;
+    const overId = over.id;
+    if (activeId === overId) return;
+
+    const isActiveATask = active.data.current?.type === "Task";
+    const isOverATask = over.data.current?.type === "Task";
+    if(!isActiveATask) return
+    //Task over another Task
+    if (isActiveATask && isOverATask) {
+      setTask((task) => {
+        const activeIndex = task.findIndex((t) => t.id === activeId);
+        const overIndex = task.findIndex((t) => t.id === overId);
+        task[activeIndex].columnId = task[overIndex].columnId;
+        return arrayMove(task, activeIndex, overIndex);
+      });
+      const isOverAColumn = over.data.current?.type === "Column"
+      if(isOverAColumn && isActiveATask)
+      setTask((task) => {
+        const activeIndex = task.findIndex((t) => t.id === activeId);
+        task[activeIndex].columnId = overId
+        return arrayMove(task, activeIndex, activeIndex);
+      });
+    }
+    
   }
   //ArraYMove
   function arrayMove<T>(array: T[], from: number, to: number): T[] {

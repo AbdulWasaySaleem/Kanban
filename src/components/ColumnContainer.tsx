@@ -1,7 +1,7 @@
 import { Column, Id, Task } from "../Model/Type";
-import { useSortable } from "@dnd-kit/sortable";
+import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import TaskCard from "./TaskCard";
 interface IProps {
   column: Column;
@@ -17,7 +17,7 @@ interface IProps {
 function ColumnContainer(props: IProps) {
   // Destructuring || coming from kanbanBoard.tsx
   const { column, deleteColumn, updateColumn, createTask, task, deleteTask, updateTask } =props;
-console.log(deleteTask)
+//console.log(deleteTask)
 
   const [editMode, setEditMode] = useState(false);
   const {
@@ -39,6 +39,12 @@ console.log(deleteTask)
     transition,
     transform: CSS.Transform.toString(transform),
   };
+
+
+  const tasksIds = useMemo(()=>{
+    return task.map(tasks=> tasks.id)
+  }, [task])
+
   //dragging for skeleton
   if (isDragging) {
     return (
@@ -49,6 +55,8 @@ console.log(deleteTask)
       ></div>
     );
   }
+
+
   return (
     <div
       ref={setNodeRef}
@@ -98,9 +106,10 @@ console.log(deleteTask)
       {/* Column task container */}
       <div className="flex flex-grow">
         <div className="flex flex-grow flex-col gap-4 p-2 overflow-x-hidden overflow-y-auto ">
+          <SortableContext items={tasksIds}>
           {task.map((tasks) => (
             <TaskCard key={tasks.id} tasks={tasks} deleteTask={deleteTask} updateTask={updateTask}/>
-          ))}
+          ))}</SortableContext>
         </div>
       </div>
       {/* Column footer */}
