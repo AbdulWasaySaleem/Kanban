@@ -1,22 +1,29 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { IoIosAddCircle } from "react-icons/io";
 import { Column } from "../Model/Type";
 import ColumnContainer from "./ColumnContainer";
+import { DndContext, DragStartEvent } from "@dnd-kit/core";
+import { SortableContext } from "@dnd-kit/sortable";
+
 
 function KanbanBoard() {
-  //for colum || vertical box i
-  const [column, setColumn] = useState<Column[]>([]);
+  const [column, setColumn] = useState<Column[]>([]); //for colum || vertical box i
+  const [active, setActive] = useState<Column | null >(null) //Draging active
   console.log(column);
+  const columnId = useMemo(()=>column.map((col)=>col.id), [column])
 
   return (
     <div className="m-auto flex min-h-screen w-full items-center overflow-x-auto overflow-y-hidden px-[40px]">
+      <DndContext onDragStart={onDragStart}>
       <div className="m-auto flex gap-2">
         {/* mapping through to add diffrent col for todo, inProgress and Ended iv*/}
         <div className="flex gap-2">
+        <SortableContext items={columnId}>
           {column.map((col) => (
-            <div><ColumnContainer column={col} deleteColumn={deleteColumn}/></div>
+            <div><ColumnContainer key={col.id} column={col} deleteColumn={deleteColumn}/></div>
           ))}
+        </SortableContext>
         </div>
         <button
           onClick={() => {
@@ -27,6 +34,7 @@ function KanbanBoard() {
           Add column <IoIosAddCircle />
         </button>
       </div>
+      </DndContext>
     </div>
   );
 
@@ -42,6 +50,14 @@ function KanbanBoard() {
   function deleteColumn(id:Id){
     const filterColumn = column.filter((col)=>col.id !== id)
     setColumn(filterColumn)
+  }
+  //dragging
+  function onDragStart(event:DragStartEvent){
+    console.log("first", event)
+    if(event.active.data.current?.type==="Column"){
+      setActive(event.active.data.current.type)
+      return;
+    }
   }
 }
 
