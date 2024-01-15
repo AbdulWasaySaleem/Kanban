@@ -15,7 +15,7 @@ function KanbanBoard() {
         {/* mapping through to add diffrent col for todo, inProgress and Ended iv*/}
         <div className="flex gap-2">
           {column.map((col) => (
-            <div><ColumnContainer column={col}/></div>
+            <div><ColumnContainer column={col} deleteColumn={deleteColumn}/></div>
           ))}
         </div>
         <button
@@ -37,6 +37,11 @@ function KanbanBoard() {
       title: `Column ${column.length + 1}`,
     };
     setColumn([...column, columnToAdd]);
+  }
+  //deleting col
+  function deleteColumn(id:Id){
+    const filterColumn = column.filter((col)=>col.id !== id)
+    setColumn(filterColumn)
   }
 }
 
