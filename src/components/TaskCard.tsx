@@ -60,7 +60,7 @@ function TaskCard({ tasks, deleteTask, updateTask }: IProps) {
           className="bg-blue-300 cursor-grab flex justify-between h-[60px]"
         >
           <textarea
-            className="bg-transparent w-full border-blue-200"
+            className="bg-transparent w-full border-blue-200 bg-blue-400 m-2 p-2 "
             value={tasks.content}
             autoFocus
             placeholder="Task content here"

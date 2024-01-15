@@ -81,6 +81,7 @@ function ColumnContainer(props: IProps) {
             {!editMode && column.title}
             {editMode && (
               <input
+              className="bg-blue-400 m-2 p-2 "
                 value={column.title}
                 onChange={(e) => updateColumn(column.id, e.target.value)}
                 autoFocus
@@ -95,6 +96,7 @@ function ColumnContainer(props: IProps) {
             )}
           </div>
           <button
+          className=""
             onClick={() => {
               deleteColumn(column.id);
             }}
