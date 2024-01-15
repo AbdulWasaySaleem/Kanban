@@ -2,18 +2,22 @@ import { Column, Id, Task } from "../Model/Type";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useState } from "react";
+import TaskCard from "./TaskCard";
 interface IProps {
   column: Column;
   deleteColumn: (id: Id) => void;
   updateColumn: (id: Id, title: string) => void;
   //tasks
-  createTask: (columnId:Id )=>void
-  task:Task[]
+  createTask: (columnId: Id) => void;
+  deleteTask: (id: Id) => void;
+  updateTask : (id:Id, content:string)=>void
+  task: Task[];
 }
 
 function ColumnContainer(props: IProps) {
   // Destructuring || coming from kanbanBoard.tsx
-  const { column, deleteColumn, updateColumn,createTask, task } = props;
+  const { column, deleteColumn, updateColumn, createTask, task, deleteTask, updateTask } =props;
+console.log(deleteTask)
 
   const [editMode, setEditMode] = useState(false);
   const {
@@ -93,14 +97,19 @@ function ColumnContainer(props: IProps) {
       </div>
       {/* Column task container */}
       <div className="flex flex-grow">
-        {task.map(tasks=>(
-          <div className="flex flex-grow flex-col gap-4 p-2 overflow-x-hidden overflow-y-auto"  key={tasks.id}>{tasks.content}</div>
-        ))}
+        <div className="flex flex-grow flex-col gap-4 p-2 overflow-x-hidden overflow-y-auto ">
+          {task.map((tasks) => (
+            <TaskCard key={tasks.id} tasks={tasks} deleteTask={deleteTask} updateTask={updateTask}/>
+          ))}
+        </div>
       </div>
       {/* Column footer */}
-      <button onClick={()=>{
-        createTask(column.id)
-      }} className="bg-mainBackgroundColor hover:bg-blue-500 text-white font-bold py-2 px-4 border border-blue-700 rounded">
+      <button
+        onClick={() => {
+          createTask(column.id);
+        }}
+        className="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
+      >
         AddTask
       </button>
     </div>

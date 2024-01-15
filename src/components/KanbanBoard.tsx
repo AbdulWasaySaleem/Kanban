@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { IoIosAddCircle } from "react-icons/io";
-import { Column, Task } from "../Model/Type";
+import { Column, Id, Task } from "../Model/Type";
 import ColumnContainer from "./ColumnContainer";
 import {
   DndContext,
@@ -17,7 +17,7 @@ import { createPortal } from "react-dom";
 function KanbanBoard() {
   const [column, setColumn] = useState<Column[]>([]); //for colum || vertical box i
   const [active, setActive] = useState<Column | null>(null); //Draging active
-  console.log(column);
+  //console.log(column);
   //creatung new subtask X
   const [task, setTask] = useState<Task[]>([])
   const columnId = useMemo(() => column.map((col) => col.id), [column]);
@@ -47,6 +47,8 @@ function KanbanBoard() {
                     deleteColumn={deleteColumn}
                     updateColumn={updateColumn}
                     createTask={createTask}
+                    updateTask={updateTask}
+                    deleteTask={deleteTask}
                     task = {task.filter((tasks)=>tasks.columnId===col.id)}
                   />
                 </div>
@@ -70,6 +72,9 @@ function KanbanBoard() {
                 deleteColumn={deleteColumn}
                 updateColumn={updateColumn}
                 createTask={createTask}
+                deleteTask={deleteTask} 
+                task = {task.filter((tasks)=>tasks.columnId===active.id)}
+                updateTask={updateTask}
               />
             )}
           </DragOverlay>,
@@ -116,6 +121,21 @@ function createTask(columnId:Id){
   }
   setTask([...task,newTask])
 }
+//deleteTask
+function deleteTask(id: Id) {
+  const newTasks = task.filter((task) => task.id !== id);
+  setTask(newTasks);
+}
+//update
+function updateTask(id: Id, content: string) {
+  const newTasks = task.map((tasks) => {
+    if (tasks.id !== id) return tasks; // Return the original task if IDs don't match
+    return { ...tasks, content }; // Return the updated task
+  });
+
+  setTask(newTasks); // Update the state with the new tasks array
+}
+
   //deleting col
   function deleteColumn(id: Id) {
     const filterColumn = column.filter((col) => col.id !== id);
@@ -154,7 +174,7 @@ function createTask(columnId:Id){
       return arrayMove(column, activeColumnIndex, overColumnIndex);
     });
   }
-
+  //ArraYMove
   function arrayMove<T>(array: T[], from: number, to: number): T[] {
     const newArray = [...array];
     const [item] = newArray.splice(from, 1);
